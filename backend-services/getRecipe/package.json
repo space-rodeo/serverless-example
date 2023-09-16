@@ -1,0 +1,11 @@
+{
+    "name": "get-recipe-item",
+    "version": "0.0.1",
+    "description": "Get a Recipe from the DynamoDB Table",
+    "main": "app.js",
+    "author": "Space Rodeo",
+    "license": "MIT",
+    "dependencies": {
+        "aws-sdk": "^2.1359.0"
+    }
+}

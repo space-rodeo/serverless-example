@@ -1,0 +1,26 @@
+.title-input {
+    margin: 0 20px;
+}
+
+.list-group-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+input.ingredient {
+    width: 80%;
+}
+
+textarea.step {
+    width: 80%;
+    resize: none;
+}
+
+.addItem-button {
+    margin: 0 20px;
+}
+
+.form-submit-area {
+    margin: 20px;
+}

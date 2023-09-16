@@ -1,0 +1,13 @@
+{
+    "name": "create-recipe-item",
+    "version": "0.0.1",
+    "description": "Create a Recipe in the DynamoDB Table",
+    "main": "app.js",
+    "author": "Space Rodeo",
+    "license": "ISC",
+    "dependencies": {
+      "aws-sdk": "^2.1360.0",
+      "uuid": "^9.0.0"
+    }
+  }
+  

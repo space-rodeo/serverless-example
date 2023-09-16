@@ -1,0 +1,24 @@
+.App {
+    text-align: left;
+    color: #FFF;
+}
+
+.navbar {
+    background: rgb(24, 24, 27);
+}
+
+.btn-primary {
+    --bs-btn-color: #FFF;
+    --bs-btn-bg: #FF9900;
+    --bs-btn-border-color: #FF9900;
+    --bs-btn-hover-bg: #bb6600;
+    --bs-btn-hover-border-color: #bb6600;
+    --bs-btn-active-bg: #bb6600;
+    --bs-btn-active-border-color: #bb6600;
+}
+
+a {
+    text-decoration: none;
+    --bs-link-color: #FF9900;
+    --bs-link-hover-color: #bb6600;
+}

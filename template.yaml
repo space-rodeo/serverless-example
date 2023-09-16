@@ -1,0 +1,191 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "AWS CloudFormation Template for running a serverless application"
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 60 
+    MemorySize: 1024
+    Tags:
+      Application: serverless-web-app
+  Api:
+    Auth:
+      UsagePlan:
+        UsagePlanName: DailyUsagePlan
+        CreateUsagePlan: PER_API
+        Description: This will limit 5000 executions per day and throttle executions on 10% of that.
+        Quota:
+          Limit: 5000
+          Period: DAY
+        Throttle:
+          BurstLimit: 100
+          RateLimit: 50
+
+Parameters:
+  StageNameParam:
+    Type: String
+    Default: dev
+  Repository:
+    Type: String
+    Description: GitHub Repository URL
+  Branch:
+    Type: String
+    Description: GitHub Branch
+    Default: main
+  OauthToken:
+    Type: String
+    Description: GitHub Repository URL
+    NoEcho: true
+
+Resources:
+  AmplifyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - amplify.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Amplify
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "amplify:*"
+                Resource: "*"
+
+  AmplifyApp:
+    Type: "AWS::Amplify::App"
+    Properties:
+      Name: ServerlessApp
+      Repository: !Ref Repository
+      Description: Serverless app
+      AccessToken: !Ref OauthToken
+      BuildSpec: |-
+        version: 0.1
+        frontend:
+          phases:
+            build:
+              commands:
+                - cd www/src
+                - npm install
+                - npm run build
+          artifacts:
+            baseDirectory: www/build/
+            files:
+              - '**/*'
+      IAMServiceRole: !GetAtt AmplifyRole.Arn
+      CustomRules:
+        - Source: "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf)$)([^.]+$)/>"
+          Target: "/index.html"
+          Status: "200"
+
+  AmplifyBranch:
+    Type: AWS::Amplify::Branch
+    Properties:
+      BranchName: !Ref Branch
+      AppId: !GetAtt AmplifyApp.AppId
+      Description: Amplify Console Branch
+      EnableAutoBuild: true
+      Tags:
+        - Key: Name
+          Value: serverless-amplify-console
+        - Key: Branch
+          Value: !Ref Branch
+
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join ['-', [recipe-table, !Ref AWS::StackName]]
+      KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+      AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+      ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5                  
+      SSESpecification:
+        SSEEnabled: true
+
+  ServerlessApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: ServerlessApi
+      StageName: !Ref StageNameParam
+      Cors:
+        AllowOrigin: "'*'"
+        AllowMethods: "'OPTIONS,HEAD,GET,PUT,POST,DELETE'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+
+  GetRecipeFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: backend-services/getRecipe
+      Handler: app.getRecipeItem
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref Table
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+      Events:
+        GetItem:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /recipes/{recipeId}
+            Method: get
+            RestApiId: !Ref ServerlessApi
+
+  ListRecipesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend-services/listRecipes
+      Handler: app.listRecipes
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref Table
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+      Events:
+        GetItem:
+          Type: Api
+          Properties:
+            Path: /recipes
+            Method: get
+            RestApiId: !Ref ServerlessApi
+
+  CreateRecipeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend-services/createRecipe
+      Handler: app.createRecipeItem
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+      Events:
+        PutItem:
+          Type: Api
+          Properties:
+            Path: /recipes
+            Method: post
+            RestApiId: !Ref ServerlessApi
+
+Outputs:
+  ServerlessFunctionApi:
+    Description: API Gateway endpoint URL for the stage
+    Value: !Sub "https://${ServerlessApi}.execute-api.${AWS::Region}.amazonaws.com/${StageNameParam}"
+  AmplifyURL:
+    Value: !Join ['', ['https://', !GetAtt AmplifyBranch.BranchName, '.', !GetAtt AmplifyApp.DefaultDomain]]
