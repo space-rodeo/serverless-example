@@ -6,8 +6,9 @@ import 'bootstrap/dist/css/bootstrap.css';
 import './index.css';
 import App from './App';
 import Home, { loader as homeLoader } from './routes/home';
-import Recipe, { loader as recipeLoader } from './routes/recipe';
+import Recipe, { loader as recipeLoader, action as recipeAction } from './routes/recipe';
 import CreateRecipe, { action as createRecipeAction } from './routes/create-recipe';
+import EditRecipe, { loader as editRecipeLoader, action as editRecipeAction } from './routes/edit-recipe';
 
 const router = createBrowserRouter([
     {
@@ -20,11 +21,17 @@ const router = createBrowserRouter([
         },{
             path: 'recipe/:recipeId',
             element: <Recipe />,
-            loader: recipeLoader
+            loader: recipeLoader,
+            action: recipeAction
         },{
             path: 'recipe/create',
             element: <CreateRecipe />,
             action: createRecipeAction
+        },{
+            path: 'recipe/:recipeId/edit',
+            element: <EditRecipe />,
+            loader: editRecipeLoader,
+            action: editRecipeAction
         }]
     }
 ]);

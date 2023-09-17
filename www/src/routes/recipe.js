@@ -1,7 +1,7 @@
 import React from 'react';
-import { Container, ListGroup, ListGroupItem } from 'reactstrap';
-import { useLoaderData } from 'react-router-dom';
-import { getRecipe } from '../api/recipes';
+import { Button, Container, ListGroup, ListGroupItem } from 'reactstrap';
+import { redirect, useLoaderData, useSubmit } from 'react-router-dom';
+import { getRecipe, deleteRecipe } from '../api/recipes';
 
 import './recipe.css';
 
@@ -10,8 +10,14 @@ export async function loader({ params }) {
     return { recipe };
 }
 
+export async function action({ params }) {
+    await deleteRecipe(params.recipeId);
+    return redirect(`/`);
+}
+
 function Recipe() {
     const { recipe } = useLoaderData();
+    const submit = useSubmit();
 
     return (
         <Container>
@@ -60,6 +66,14 @@ function Recipe() {
                     </ListGroup>
                 </div>
             </div>
+            <Button href={`/recipe/${recipe.id}/edit`}>Edit</Button>
+            <Button onClick={(e) => {
+                submit(recipe.id, {
+                    action: `/recipe/${recipe.id}`,
+                    method: 'DELETE'
+                });
+            }} color='danger' title='Delete Recipe'>Delete</Button>
+
         </div>
         </Container>
     );

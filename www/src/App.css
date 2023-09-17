@@ -19,6 +19,9 @@
 
 a {
     text-decoration: none;
-    --bs-link-color: #FF9900;
-    --bs-link-hover-color: #bb6600;
+    color: #FF9900;
+}
+
+a:hover {
+    color: #bb6600;
 }

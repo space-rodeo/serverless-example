@@ -34,3 +34,29 @@ export async function createRecipe(newRecipe) {
     }
     throw new Error(result.data);
 }
+
+export async function updateRecipe(id, updates) {
+    if (!id || !updates) {
+        return;
+    }
+    const result = await axios({
+        method: 'PUT',
+        url: `${config.api_base_url}/recipes/${id}`,
+        data: updates
+    });
+
+    if (result && result.status === 200) {
+        return result.data;
+    }
+    throw new Error(result.data);
+}
+
+export async function deleteRecipe(id) {
+    if (id === null || id === '') return;
+
+    const result = await axios({
+        method: 'DELETE',
+        url: `${config.api_base_url}/recipes/${id}`
+    });
+    return result.data;
+}

@@ -183,6 +183,44 @@ Resources:
             Method: post
             RestApiId: !Ref ServerlessApi
 
+  UpdateecipeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend-services/updateRecipe
+      Handler: app.updateRecipeItem
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+      Events:
+        PutItem:
+          Type: Api
+          Properties:
+            Path: /recipes/{recipeId}
+            Method: PUT
+            RestApiId: !Ref ServerlessApi
+
+  DeleteRecipeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend-services/deleteRecipe
+      Handler: app.deleteRecipeItem
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+      Events:
+        PutItem:
+          Type: Api
+          Properties:
+            Path: /recipes/{recipeId}
+            Method: DELETE
+            RestApiId: !Ref ServerlessApi
+
 Outputs:
   ServerlessFunctionApi:
     Description: API Gateway endpoint URL for the stage
